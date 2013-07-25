@@ -43,6 +43,21 @@ func init() {
 }
 
 func main() {
+	for {
+		rsp := vote()
+		if len(rsp) < 2000 {
+			if strings.Index(rsp, "操作成功") > 0 {
+				continue
+			} else {
+				break
+			}
+		} else {
+			break
+		}
+	}
+}
+
+func vote() string {
 	client := http.DefaultClient
 	client.Jar = new(myJar)
 	rsp, err := client.Get(reg_url)
@@ -96,7 +111,7 @@ func main() {
 		panic(err)
 	}
 	if len(rspBytes) > 1000 {
-		log.Fatal("估计注册未成功,返回内容太长")
+		log.Fatal("估计注册未成功,返回内容太长:" + string(rspBytes))
 	} else {
 		log.Println("成功注册帐号:" + uname + "，开始投票")
 	}
@@ -114,9 +129,15 @@ func main() {
 	//登录
 	rsp, err = client.Get(vote_url + vForm.Encode())
 	rspBytes, _ = ioutil.ReadAll(rsp.Body)
-	gbkRsp, _ := iconv.ConvertString(string(rspBytes), "gbk", "utf-8")
+	var gbkRsp string
+	if len(rspBytes) < 1000 {
+		gbkRsp, _ = iconv.ConvertString(string(rspBytes), "gbk", "utf-8")
+	}else{
+		gbkRsp = string(rspBytes)
+	}
 
 	log.Println("投票完成，返回内容为:", gbkRsp)
+	return gbkRsp
 }
 
 func findValue(str *string, head string) string {
